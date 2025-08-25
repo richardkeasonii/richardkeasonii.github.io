@@ -41,7 +41,7 @@
 
   <script>
     let countdown;
-    let remaining = 60; // 60 seconds
+    let remaining = 60;
     const timerDisplay = document.getElementById("timer");
 
     function updateDisplay() {
@@ -55,9 +55,12 @@
       countdown = setInterval(() => {
         remaining--;
         updateDisplay();
+        if (remaining <= 15 && remaining > 0) {
+          playTick();
+        }
         if (remaining <= 0) {
           clearInterval(countdown);
-          playBeep();
+          playGentleBeep();
         }
       }, 1000);
     }
@@ -73,19 +76,39 @@
       updateDisplay();
     }
 
-    function playBeep() {
+    function playGentleBeep() {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
       const oscillator = ctx.createOscillator();
       const gainNode = ctx.createGain();
-      oscillator.type = "sine";
-      oscillator.frequency.setValueAtTime(1000, ctx.currentTime); // 1kHz
+
+      oscillator.type = "triangle"; // softer than sine
+      oscillator.frequency.setValueAtTime(440, ctx.currentTime); // A4 tone
+      gainNode.gain.setValueAtTime(0.2, ctx.currentTime); // lower volume
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.2); // fade out
+
       oscillator.connect(gainNode);
       gainNode.connect(ctx.destination);
       oscillator.start();
-      oscillator.stop(ctx.currentTime + 0.3); // 0.3s beep
+      oscillator.stop(ctx.currentTime + 1.2);
     }
 
-    updateDisplay(); // initialize display
+    function playTick() {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+
+      oscillator.type = "square"; // sharper tick
+      oscillator.frequency.setValueAtTime(800, ctx.currentTime); // quick high blip
+      gainNode.gain.setValueAtTime(0.05, ctx.currentTime); // very soft
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.1); // very short
+
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      oscillator.start();
+      oscillator.stop(ctx.currentTime + 0.1);
+    }
+
+    updateDisplay();
   </script>
 </body>
 </html>
