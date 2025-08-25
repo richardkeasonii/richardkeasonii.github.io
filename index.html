@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>D&D Turn Timer</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background: #1e1e1e;
+      color: #f0f0f0;
+      padding: 2em;
+    }
+    #timer {
+      font-size: 5em;
+      margin: 20px 0;
+    }
+    button {
+      font-size: 1.2em;
+      margin: 5px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #444;
+      color: white;
+    }
+    button:hover {
+      background: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>D&D Turn Timer</h1>
+  <div id="timer">01:00</div>
+  <div>
+    <button onclick="startTimer()">Start</button>
+    <button onclick="resetTimer()">Reset</button>
+    <button onclick="addTime(30)">+30 Seconds</button>
+  </div>
+
+  <script>
+    let countdown;
+    let remaining = 60; // 60 seconds
+    const timerDisplay = document.getElementById("timer");
+
+    function updateDisplay() {
+      const mins = String(Math.floor(remaining / 60)).padStart(2, '0');
+      const secs = String(remaining % 60).padStart(2, '0');
+      timerDisplay.textContent = `${mins}:${secs}`;
+    }
+
+    function startTimer() {
+      clearInterval(countdown);
+      countdown = setInterval(() => {
+        remaining--;
+        updateDisplay();
+        if (remaining <= 0) {
+          clearInterval(countdown);
+          playBeep();
+        }
+      }, 1000);
+    }
+
+    function resetTimer() {
+      clearInterval(countdown);
+      remaining = 60;
+      updateDisplay();
+    }
+
+    function addTime(seconds) {
+      remaining += seconds;
+      updateDisplay();
+    }
+
+    function playBeep() {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(1000, ctx.currentTime); // 1kHz
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      oscillator.start();
+      oscillator.stop(ctx.currentTime + 0.3); // 0.3s beep
+    }
+
+    updateDisplay(); // initialize display
+  </script>
+</body>
+</html>
