@@ -17,7 +17,7 @@
       display: inline-block;
       padding: 40px 60px;
       border: 20px solid transparent;
-      border-image: url('template.png') 100 round; /* <-- your flourish image */
+      border-image: url('template.png') 100 round;
       border-image-slice: 30 fill;
       border-radius: 12px;
       background: rgba(0,0,0,0.6);
@@ -73,6 +73,7 @@
     <div id="timer">01:00</div>
     <div>
       <button onclick="startTimer()">Start</button>
+      <button onclick="pauseTimer()">Pause</button>
       <button onclick="resetTimer()">Reset</button>
       <button onclick="addTime(30)">+30 Seconds</button>
     </div>
@@ -112,6 +113,10 @@
       }, 1000);
     }
 
+    function pauseTimer() {
+      clearInterval(countdown);
+    }
+
     function resetTimer() {
       clearInterval(countdown);
       remaining = 60;
@@ -145,8 +150,8 @@
 
     function playGentleBeepTriple() {
       playGentleBeep(0);
-      playGentleBeep(0.33);
-      playGentleBeep(0.66);
+      playGentleBeep(1.0);
+      playGentleBeep(2.0);
     }
 
     function playTick() {
