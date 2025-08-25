@@ -5,16 +5,29 @@
   <title>D&D Turn Timer</title>
   <style>
     body {
-      font-family: sans-serif;
+      font-family: serif;
       text-align: center;
       background: #1e1e1e;
       color: #f0f0f0;
       padding: 2em;
+      transition: background 0.5s, color 0.5s;
     }
+
+    .frame {
+      display: inline-block;
+      padding: 40px 60px;
+      border: 20px solid transparent;
+      border-image: url('template.png') 100 round; /* <-- your flourish image */
+      border-image-slice: 30 fill;
+      border-radius: 12px;
+      background: rgba(0,0,0,0.6);
+    }
+
     #timer {
       font-size: 5em;
       margin: 20px 0;
     }
+
     button {
       font-size: 1.2em;
       margin: 5px;
@@ -24,24 +37,58 @@
       cursor: pointer;
       background: #444;
       color: white;
+      transition: background 0.3s, color 0.3s;
     }
     button:hover {
       background: #666;
     }
+
+    .controls {
+      margin-top: 20px;
+    }
+    input[type=range] {
+      width: 200px;
+    }
+
+    /* Light mode */
+    body.light {
+      background: #fdfdfd;
+      color: #222;
+    }
+    body.light .frame {
+      background: rgba(255,255,255,0.8);
+    }
+    body.light button {
+      background: #ddd;
+      color: #000;
+    }
+    body.light button:hover {
+      background: #bbb;
+    }
   </style>
 </head>
 <body>
-  <h1>D&D Turn Timer</h1>
-  <div id="timer">01:00</div>
-  <div>
-    <button onclick="startTimer()">Start</button>
-    <button onclick="resetTimer()">Reset</button>
-    <button onclick="addTime(30)">+30 Seconds</button>
+  <div class="frame">
+    <h1>D&D Turn Timer</h1>
+    <div id="timer">01:00</div>
+    <div>
+      <button onclick="startTimer()">Start</button>
+      <button onclick="resetTimer()">Reset</button>
+      <button onclick="addTime(30)">+30 Seconds</button>
+    </div>
+    <div class="controls">
+      <label for="volume">Volume:</label>
+      <input type="range" id="volume" min="0" max="1" step="0.01" value="0.3" oninput="setVolume(this.value)">
+    </div>
+    <div class="controls">
+      <button onclick="toggleMode()">Toggle Dark/Light</button>
+    </div>
   </div>
 
   <script>
     let countdown;
     let remaining = 60;
+    let globalVolume = 0.3;
     const timerDisplay = document.getElementById("timer");
 
     function updateDisplay() {
@@ -60,9 +107,7 @@
         }
         if (remaining <= 0) {
           clearInterval(countdown);
-          playGentleBeep();
-          playGentleBeep();
-          playGentleBeep();
+          playGentleBeepTriple();
         }
       }, 1000);
     }
@@ -78,20 +123,30 @@
       updateDisplay();
     }
 
-    function playGentleBeep() {
+    function setVolume(val) {
+      globalVolume = parseFloat(val);
+    }
+
+    function playGentleBeep(timeOffset = 0) {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
       const oscillator = ctx.createOscillator();
       const gainNode = ctx.createGain();
 
-      oscillator.type = "triangle"; // softer than sine
-      oscillator.frequency.setValueAtTime(440, ctx.currentTime); // A4 tone
-      gainNode.gain.setValueAtTime(0.2, ctx.currentTime); // lower volume
-      gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.2); // fade out
+      oscillator.type = "triangle";
+      oscillator.frequency.setValueAtTime(440, ctx.currentTime + timeOffset);
+      gainNode.gain.setValueAtTime(globalVolume, ctx.currentTime + timeOffset);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + timeOffset + 1.0);
 
       oscillator.connect(gainNode);
       gainNode.connect(ctx.destination);
-      oscillator.start();
-      oscillator.stop(ctx.currentTime + 1.2);
+      oscillator.start(ctx.currentTime + timeOffset);
+      oscillator.stop(ctx.currentTime + timeOffset + 1.0);
+    }
+
+    function playGentleBeepTriple() {
+      playGentleBeep(0);
+      playGentleBeep(1.0);
+      playGentleBeep(2.0);
     }
 
     function playTick() {
@@ -99,15 +154,19 @@
       const oscillator = ctx.createOscillator();
       const gainNode = ctx.createGain();
 
-      oscillator.type = "square"; // sharper tick
-      oscillator.frequency.setValueAtTime(800, ctx.currentTime); // quick high blip
-      gainNode.gain.setValueAtTime(0.05, ctx.currentTime); // very soft
-      gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.1); // very short
+      oscillator.type = "square";
+      oscillator.frequency.setValueAtTime(800, ctx.currentTime);
+      gainNode.gain.setValueAtTime(globalVolume * 0.2, ctx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.1);
 
       oscillator.connect(gainNode);
       gainNode.connect(ctx.destination);
       oscillator.start();
       oscillator.stop(ctx.currentTime + 0.1);
+    }
+
+    function toggleMode() {
+      document.body.classList.toggle("light");
     }
 
     updateDisplay();
